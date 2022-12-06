@@ -34,9 +34,11 @@ create_dataset("BG(-)")
 create_dataset("BG(+)")
 
 df <- read_csv("BG(-).csv")
-df2 <- df %>% add_row(read_csv("BG(+).csv"))
+df2 <- df %>%
+    add_row(read_csv("BG(+).csv")) %>%
+    mutate(BG = str_replace(.$BG, r"(BG\(\+\))", "1.5% BG") %>% str_replace(., r"(BG\(\-\))", "0% BG"))
 
-    scientific_10 <- function(x) {
+scientific_10 <- function(x) {
         index_zero <- which(x == 0) 
         label <- scientific_format()(x)
         label <- str_replace(label, "e", " %*% 10^")
@@ -47,29 +49,29 @@ df2 <- df %>% add_row(read_csv("BG(+).csv"))
 
 my_theme_article_single_column <- theme_classic() + # 装飾を全部なくす
     theme(
-        legend.title = element_text(colour = "black", size = 7, face = "bold"), # 凡例タイトルの文字サイズ
-        legend.text = element_text(colour = "black", size = 7), #凡例テキストのサイズ
+        legend.title = element_text(colour = "black", size = 9, face = "bold"), # 凡例タイトルの文字サイズ
+        legend.text = element_text(colour = "black", size = 9), #凡例テキストのサイズ
         panel.border = element_blank(), 
         axis.ticks = element_line(colour = "black", size = 0.5) , # 軸の色&太さ
         axis.ticks.length = unit(1, "mm"), # 軸目盛の長さ
-        axis.title = element_text(colour = "black", size = 7, face = "bold"),
-        axis.text.x = element_text(colour = "black", size = 7, face = "bold"), 
-        axis.text.y = element_text(colour = "black", size = 7, face = "bold"), #軸のフォントの色
+        axis.title = element_text(colour = "black", size = 9, face = "bold"),
+        axis.text.x = element_text(colour = "black", size = 9, face = "bold"), 
+        axis.text.y = element_text(colour = "black", size = 9, face = "bold"), #軸のフォントの色
         axis.line = element_line(colour = "black", size = 0.5, lineend = "square") ,   #軸の太さ(size = 1とか指定)と色の指定
         title = element_text(colour = "black", size = rel(0.5), face = "bold"),
-        strip.text.x = element_text(size = 7, face = "bold"),
+        strip.text.x = element_text(size = 9, face = "bold"),
         strip.background = element_blank(),
     )
 
 df2 %>%
     ggplot(aes(Radius_μm, fill = BG)) +
     geom_histogram(
-        aes(y=100*(..count..)/sum(..count..)),
-        alpha = 0.4,
+        aes(y = 100 * (..count..) / sum(..count..)),
+        alpha = 0.3,
         position = "identity",
         lwd = 0.2
-        ) +
-    geom_density(aes(y=4*..density.., colour = BG), stat="density", alpha = 0, size = 0.5) +
+    ) +
+    geom_density(aes(y = 4 * ..density.., colour = BG), stat = "density", alpha = 0, size = 0.5) +
     my_theme_article_single_column +
     scale_x_log10(
         limits = c(0.5, 50),
@@ -81,7 +83,7 @@ df2 %>%
         labels = scales::number_format(accuracy = 0.1)
         ) +
     xlab("Diameter (μm)") +
-    ylab("Normlized particle count(%)") +
+    ylab("Normlized particle count\n(%)") +
     scale_color_jco() +
     scale_fill_jco() +
     annotation_logticks(
@@ -100,15 +102,15 @@ df_summary <-
         sd = sd(Radius_μm)
         ) %>%
         mutate(
-    cv = sd*100/mean
+    cv = sd * 100 / mean
     ) %>%
     write_csv("before_extruder_CV.csv")
 
 
 ggsave(
-    here(paste0(today(), "_Fig@@.png")),
+    here(paste0(today(), "_w_hist.png")),
     width = 12,
-    height = 7,
+    height = 9,
     dpi = 320,
     units = "cm"
     )
